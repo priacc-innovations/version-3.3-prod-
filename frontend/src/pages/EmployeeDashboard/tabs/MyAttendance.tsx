@@ -1,11 +1,12 @@
 // src/pages/EmployeeDashboard/tabs/MyAttendance.tsx
+
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, CheckCircle, XCircle, Clock, MinusCircle } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card";
 import { useAuthStore } from "../../../store/authStore";
 import { format } from "date-fns";
-import api from "../../../api/axiosInstance";  // ✅ token-based instance
+import api from "../../../api/axiosInstance";
 
 type AttendanceItem = {
   id: number;
@@ -35,7 +36,11 @@ export default function MyAttendance() {
     }
   }, [user?.id]);
 
-  // ✅ UPDATED — Detects Late Login in all formats
+  const isWeekend = (dateString: string) => {
+    const day = new Date(dateString).getDay();
+    return day === 6 || day === 0; // 6 = Saturday, 0 = Sunday
+  };
+
   const normalizeStatus = (s?: string) => {
     if (!s) return "absent";
     const val = s.toLowerCase().trim();
@@ -56,19 +61,24 @@ export default function MyAttendance() {
 
   const loadAttendance = async (id: number) => {
     try {
-      const res = await api.get(`/attendance/user/${id}`);
-
+      const res = await api.get(/attendance/user/${id});
       const data = res.data || [];
 
-      const mapped = (Array.isArray(data) ? data : [data]).map((att: any) => ({
-        id: att.id,
-        date: att.date,
-        loginTime: att.loginTime ?? att.login_time ?? null,
-        logoutTime: att.logoutTime ?? att.logout_time ?? null,
-        status: normalizeStatus(att.status),
-        remarks: att.remarks ?? att.reason ?? "",
-        reason: att.reason ?? att.remarks ?? "",
-      }));
+      const mapped = (Array.isArray(data) ? data : [data]).map((att: any) => {
+        const weekend = isWeekend(att.date);
+
+        return {
+          id: att.id,
+          date: att.date,
+          loginTime: att.loginTime ?? att.login_time ?? null,
+          logoutTime: att.logoutTime ?? att.logout_time ?? null,
+          status: weekend ? "weekend" : normalizeStatus(att.status),
+          remarks: weekend
+            ? "Weekend — Not Counted"
+            : att.remarks ?? att.reason ?? "",
+          reason: att.reason ?? att.remarks ?? "",
+        };
+      });
 
       const sorted = mapped.sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -76,13 +86,15 @@ export default function MyAttendance() {
 
       setAttendance(sorted);
 
+      const workingDays = mapped.filter((a) => a.status !== "weekend");
+
       setStats({
-        present: mapped.filter((a) => a.status === "present").length,
-        absent: mapped.filter((a) => a.status === "absent").length,
-        late: mapped.filter((a) => a.status === "late").length,
-        halfDay: mapped.filter((a) => a.status === "half_day").length,
-        leave: mapped.filter((a) => a.status === "leave").length,
-        total: mapped.length,
+        present: workingDays.filter((a) => a.status === "present").length,
+        absent: workingDays.filter((a) => a.status === "absent").length,
+        late: workingDays.filter((a) => a.status === "late").length,
+        halfDay: workingDays.filter((a) => a.status === "half_day").length,
+        leave: workingDays.filter((a) => a.status === "leave").length,
+        total: workingDays.length,
       });
     } catch (err) {
       console.error("Attendance fetch error", err);
@@ -101,6 +113,8 @@ export default function MyAttendance() {
         return <MinusCircle className="w-5 h-5 text-yellow-500" />;
       case "leave":
         return <Calendar className="w-5 h-5 text-blue-500" />;
+      case "weekend":
+        return <Calendar className="w-5 h-5 text-gray-400" />;
       default:
         return null;
     }
@@ -118,6 +132,8 @@ export default function MyAttendance() {
         return "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400";
       case "leave":
         return "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400";
+      case "weekend":
+        return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
       default:
         return "";
     }
@@ -183,7 +199,7 @@ export default function MyAttendance() {
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
             <div
               className="bg-gradient-to-r from-green-500 to-emerald-500 h-4 rounded-full transition-all duration-500"
-              style={{ width: `${attendancePercentage}%` }}
+              style={{ width: ${attendancePercentage}% }}
             />
           </div>
         </CardContent>
@@ -213,10 +229,12 @@ export default function MyAttendance() {
                     </p>
 
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {att.loginTime && att.logoutTime
-                        ? `${att.loginTime} - ${att.logoutTime}`
+                      {att.status === "weekend"
+                        ? "Weekend — Not Counted"
+                        : att.loginTime && att.logoutTime
+                        ? ${att.loginTime} - ${att.logoutTime}
                         : att.loginTime
-                        ? `In: ${att.loginTime}`
+                        ? In: ${att.loginTime}
                         : "No clock in"}
                     </p>
                   </div>
@@ -231,7 +249,7 @@ export default function MyAttendance() {
                     {(att.status || "absent").replace("_", " ")}
                   </span>
 
-                  {att.remarks && (
+                  {att.remarks && att.status !== "weekend" && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 max-w-xs">
                       {att.remarks}
                     </p>
