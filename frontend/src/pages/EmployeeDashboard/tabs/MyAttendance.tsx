@@ -38,7 +38,7 @@ export default function MyAttendance() {
 
   const isWeekend = (dateString: string) => {
     const day = new Date(dateString).getDay();
-    return day === 6 || day === 0; // 6 = Saturday, 0 = Sunday
+    return day === 6 || day === 0; // Sat/Sun
   };
 
   const normalizeStatus = (s?: string) => {
@@ -61,7 +61,7 @@ export default function MyAttendance() {
 
   const loadAttendance = async (id: number) => {
     try {
-      const res = await api.get(/attendance/user/${id});
+      const res = await api.get(`/attendance/user/${id}`);
       const data = res.data || [];
 
       const mapped = (Array.isArray(data) ? data : [data]).map((att: any) => {
@@ -172,12 +172,8 @@ export default function MyAttendance() {
                   <Calendar className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {item.label}
-                  </p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">
-                    {item.value}
-                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{item.label}</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">{item.value}</p>
                 </div>
               </div>
             </CardContent>
@@ -199,7 +195,7 @@ export default function MyAttendance() {
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
             <div
               className="bg-gradient-to-r from-green-500 to-emerald-500 h-4 rounded-full transition-all duration-500"
-              style={{ width: ${attendancePercentage}% }}
+              style={{ width: `${attendancePercentage}%` }}
             />
           </div>
         </CardContent>
@@ -232,9 +228,9 @@ export default function MyAttendance() {
                       {att.status === "weekend"
                         ? "Weekend — Not Counted"
                         : att.loginTime && att.logoutTime
-                        ? ${att.loginTime} - ${att.logoutTime}
+                        ? `${att.loginTime} - ${att.logoutTime}`
                         : att.loginTime
-                        ? In: ${att.loginTime}
+                        ? `In: ${att.loginTime}`
                         : "No clock in"}
                     </p>
                   </div>
