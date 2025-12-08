@@ -222,8 +222,7 @@ public class AttendanceCsvFileService {
                     } else {
                         if (!login.isAfter(FULL_PRESENT_LIMIT) &&
                                 logout != null &&
-                                !logout.isBefore(LocalTime.of(18, 0)) &&
-                                workedHours >= FULL_DAY_HOURS) {
+                                !logout.isBefore(LocalTime.of(18, 0)) ) {
 
                             finalStatus = "PRESENT";
                             finalRemark = "Full Day Present — Time Condition Met";
@@ -260,3 +259,4 @@ public class AttendanceCsvFileService {
         System.out.println("✔ Attendance Finalized using Login/Logout Rules - " + todayStr);
     }
 }
+
