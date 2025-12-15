@@ -30,7 +30,6 @@ export default function PayslipManagement() {
   useEffect(() => {
     const loadEmployees = async () => {
       try {
-        // api baseURL = /api
         const res = await api.get("/user/all");
         const data = res.data || [];
 
@@ -68,12 +67,15 @@ export default function PayslipManagement() {
         return;
       }
 
+      // =====================================================
+      // venkatasagar ✅ SUPPORT BOTH FILENAME FORMATS
+      // 1) PIPL0114.pdf
+      // 2) PIPL0114 - Name.pdf
+      // =====================================================
       const raw = file.name.replace(/\.pdf$/i, "");
-      const parts = raw.split(" - "); // exact format required
+      const empid = raw.split(" - ")[0].trim();
+      // =====================================================
 
-      if (parts.length !== 2) return;
-
-      const empid = parts[0].trim();
       const employee = employees.find((e) => e.employee_id === empid);
 
       if (employee) {
@@ -88,7 +90,10 @@ export default function PayslipManagement() {
     });
 
     if (matched.length === 0) {
-      setMessage({ text: "No matching employees found in filenames.", type: "error" });
+      setMessage({
+        text: "No matching employees found in filenames.",
+        type: "error",
+      });
       return;
     }
 
@@ -105,9 +110,12 @@ export default function PayslipManagement() {
     });
 
     setMessage({
-      text: `File(s) selected: ${matched.map((m) => m.file.name).join(", ")}`,
+      text: File(s) selected: ${matched.map((m) => m.file.name).join(", ")},
       type: "success",
     });
+
+    // venkatasagar - allow re-select same file
+    e.target.value = "";
   };
 
   // ---------------- UPLOAD TO BACKEND (TOKEN-BASED) ----------------
@@ -129,14 +137,16 @@ export default function PayslipManagement() {
     formData.append("year", year.toString());
 
     try {
-      // api → /api/payslips/upload/bulk with JWT
       const resp = await api.post("/payslips/upload/bulk", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      const msg = typeof resp.data === "string" ? resp.data : "Payslips uploaded successfully.";
+      const msg =
+        typeof resp.data === "string"
+          ? resp.data
+          : "Payslips uploaded successfully.";
 
       setUploadSuccess(true);
       setUploadedFiles((prev) =>
@@ -170,7 +180,7 @@ export default function PayslipManagement() {
   const getMonthName = (m: number) =>
     new Date(2000, m - 1).toLocaleString("default", { month: "long" });
 
-  // ---------------- UI ----------------
+  // ---------------- UI (UNCHANGED) ----------------
   return (
     <div className="space-y-6">
       {/* Guidelines */}
@@ -189,6 +199,9 @@ export default function PayslipManagement() {
             </p>
             <p>
               <b>Format:</b> PIPLXXXX - Name.pdf
+            </p>
+            <p>
+              <b>Format:</b> PIPLXXXX.pdf
             </p>
           </div>
         </div>
@@ -263,7 +276,6 @@ export default function PayslipManagement() {
             <p className="text-gray-400 text-sm">or drag and drop</p>
           </label>
 
-          {/* Selected Files */}
           {uploadedFiles.filter((f) => f.month === month && f.year === year).length >
             0 && (
             <div className="mt-4">
