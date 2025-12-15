@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Upload, FileText, Trash2, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card";
-import api from "../../../api/axiosInstance"; // ✅ token-based axios
+import api from "../../../api/axiosInstance";
 
 interface UploadedPayslip {
   employee_id: string;
@@ -26,7 +26,7 @@ export default function PayslipManagement() {
   });
   const [employees, setEmployees] = useState<any[]>([]);
 
-  // ---------------- GET EMPLOYEES (TOKEN-BASED) ----------------
+  // ---------------- GET EMPLOYEES ----------------
   useEffect(() => {
     const loadEmployees = async () => {
       try {
@@ -67,14 +67,11 @@ export default function PayslipManagement() {
         return;
       }
 
-      // =====================================================
-      // venkatasagar ✅ SUPPORT BOTH FILENAME FORMATS
+      // SUPPORT BOTH:
       // 1) PIPL0114.pdf
       // 2) PIPL0114 - Name.pdf
-      // =====================================================
       const raw = file.name.replace(/\.pdf$/i, "");
       const empid = raw.split(" - ")[0].trim();
-      // =====================================================
 
       const employee = employees.find((e) => e.employee_id === empid);
 
@@ -109,18 +106,21 @@ export default function PayslipManagement() {
       return [...filtered, ...matched];
     });
 
+    // ✅ FIXED TEMPLATE STRING (BUILD ERROR WAS HERE)
     setMessage({
-      text: File(s) selected: ${matched.map((m) => m.file.name).join(", ")},
+      text: `File(s) selected: ${matched.map((m) => m.file.name).join(", ")}`,
       type: "success",
     });
 
-    // venkatasagar - allow re-select same file
+    // allow re-select same file
     e.target.value = "";
   };
 
-  // ---------------- UPLOAD TO BACKEND (TOKEN-BASED) ----------------
+  // ---------------- UPLOAD TO BACKEND ----------------
   const handleUploadToBackend = async () => {
-    const monthFiles = uploadedFiles.filter((f) => f.month === month && f.year === year);
+    const monthFiles = uploadedFiles.filter(
+      (f) => f.month === month && f.year === year
+    );
 
     if (monthFiles.length === 0) {
       setMessage({ text: "Please select at least one payslip.", type: "error" });
@@ -172,7 +172,12 @@ export default function PayslipManagement() {
   const removeFile = (employee_id: string) => {
     setUploadedFiles((prev) =>
       prev.filter(
-        (f) => !(f.employee_id === employee_id && f.month === month && f.year === year)
+        (f) =>
+          !(
+            f.employee_id === employee_id &&
+            f.month === month &&
+            f.year === year
+          )
       )
     );
   };
@@ -180,7 +185,7 @@ export default function PayslipManagement() {
   const getMonthName = (m: number) =>
     new Date(2000, m - 1).toLocaleString("default", { month: "long" });
 
-  // ---------------- UI (UNCHANGED) ----------------
+  // ---------------- UI ----------------
   return (
     <div className="space-y-6">
       {/* Guidelines */}
@@ -191,18 +196,10 @@ export default function PayslipManagement() {
           </div>
           <div>
             <h2 className="text-xl font-semibold">Important Guidelines</h2>
-            <p className="mt-2">
-              <b>File Format:</b> PDF only
-            </p>
-            <p>
-              <b>Max Size:</b> 5MB
-            </p>
-            <p>
-              <b>Format:</b> PIPLXXXX - Name.pdf
-            </p>
-            <p>
-              <b>Format:</b> PIPLXXXX.pdf
-            </p>
+            <p className="mt-2"><b>File Format:</b> PDF only</p>
+            <p><b>Max Size:</b> 5MB</p>
+            <p><b>Format:</b> PIPLXXXX - Name.pdf</p>
+            <p><b>Format:</b> PIPLXXXX.pdf</p>
           </div>
         </div>
       </div>
@@ -232,7 +229,7 @@ export default function PayslipManagement() {
               className="border p-2 rounded"
             >
               {[2024, 2025, 2026].map((y) => (
-                <option key={y}>{y}</option>
+                <option key={y} value={y}>{y}</option>
               ))}
             </select>
           </div>
@@ -254,7 +251,7 @@ export default function PayslipManagement() {
         </div>
       )}
 
-      {/* File Upload UI */}
+      {/* Upload */}
       <Card>
         <CardHeader>
           <CardTitle>
@@ -276,8 +273,7 @@ export default function PayslipManagement() {
             <p className="text-gray-400 text-sm">or drag and drop</p>
           </label>
 
-          {uploadedFiles.filter((f) => f.month === month && f.year === year).length >
-            0 && (
+          {uploadedFiles.filter((f) => f.month === month && f.year === year).length > 0 && (
             <div className="mt-4">
               <h4 className="font-medium mb-2">Payslips to Upload:</h4>
 
@@ -299,10 +295,12 @@ export default function PayslipManagement() {
               </ul>
 
               <Button onClick={handleUploadToBackend} className="gap-2 mt-4">
-                <Upload className="w-5 h-5" /> Upload{" "}
+                <Upload className="w-5 h-5" />
+                Upload{" "}
                 {
-                  uploadedFiles.filter((f) => f.month === month && f.year === year)
-                    .length
+                  uploadedFiles.filter(
+                    (f) => f.month === month && f.year === year
+                  ).length
                 }{" "}
                 Payslip(s)
               </Button>
