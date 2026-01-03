@@ -6,7 +6,7 @@ spring:
     name: employee-service
 
   datasource:
-    url: jdbc:postgresql://teamhub-db-server.csfqwga84pcf.us-east-1.rds.amazonaws.com:5432/employee_db
+    url: jdbc:postgresql://teamhub-db-server-from-snap.csfqwga84pcf.us-east-1.rds.amazonaws.com:5432/employee_db
     username: priaccinnovation
     password: priaccinnovation
     driver-class-name: org.postgresql.Driver
